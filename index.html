@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QuantRisk — Quantum-Assisted Portfolio Optimization</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0E1A;
+    --bg-panel:#111729;
+    --violet:#9B6BFF;
+    --violet-dim:#6D4FCC;
+    --teal:#2FE6B8;
+    --text:#F1F2F8;
+    --muted:#8B93B0;
+    --line:#212A44;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    line-height:1.6;
+    overflow-x:hidden;
+  }
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif; font-weight:600;}
+  .wrap{max-width:860px; margin:0 auto; padding:0 24px; position:relative;}
+
+  header{
+    min-height:92vh; display:flex; flex-direction:column; justify-content:center;
+    position:relative; overflow:hidden; padding:80px 0 60px;
+  }
+  .glow{
+    position:absolute; border-radius:50%; filter:blur(80px); pointer-events:none;
+    animation:drift 14s ease-in-out infinite alternate;
+  }
+  .glow-1{width:420px; height:420px; background:rgba(155,107,255,0.35); top:-160px; right:-120px;}
+  .glow-2{width:340px; height:340px; background:rgba(47,230,184,0.22); bottom:-140px; left:-100px; animation-delay:-6s;}
+  @keyframes drift{ to{ transform:translate(30px,20px) scale(1.08); } }
+
+  .kicker{
+    color:var(--teal); font-size:0.92rem; font-weight:500; margin-bottom:20px;
+    letter-spacing:0.02em; opacity:0; animation:rise 0.7s ease forwards 0.1s;
+  }
+  h1{
+    font-size:clamp(2.3rem, 5.4vw, 3.6rem); line-height:1.12; max-width:13ch;
+    opacity:0; animation:rise 0.7s ease forwards 0.25s;
+  }
+  h1 .accent{
+    background:linear-gradient(100deg, var(--violet), var(--teal));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .lede{
+    margin-top:24px; font-size:1.15rem; color:var(--muted); max-width:54ch;
+    opacity:0; animation:rise 0.7s ease forwards 0.4s;
+  }
+  .cta-row{
+    margin-top:38px; display:flex; gap:14px; flex-wrap:wrap;
+    opacity:0; animation:rise 0.7s ease forwards 0.55s;
+  }
+  @keyframes rise{ from{opacity:0; transform:translateY(16px);} to{opacity:1; transform:translateY(0);} }
+
+  .btn{
+    display:inline-block; padding:13px 24px; border-radius:8px;
+    text-decoration:none; font-weight:500; font-size:0.95rem;
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .btn-primary{background:linear-gradient(100deg, var(--violet), #7C4FE0); color:#fff;}
+  .btn-primary:hover{transform:translateY(-2px); box-shadow:0 10px 30px rgba(155,107,255,0.35);}
+  .btn-ghost{border:1px solid var(--line); color:var(--text);}
+  .btn-ghost:hover{transform:translateY(-2px); border-color:var(--teal);}
+
+  .circuit-box{
+    margin-top:56px; border:1px solid var(--line); border-radius:14px;
+    background:var(--bg-panel); padding:22px 20px 14px;
+    opacity:0; animation:rise 0.8s ease forwards 0.7s;
+  }
+  .circuit-label{font-size:0.82rem; color:var(--muted); margin-bottom:10px;}
+  .gate{ animation:pulse 2.4s ease-in-out infinite; }
+  .gate.g2{ animation-delay:0.3s; }
+  .gate.g3{ animation-delay:0.6s; }
+  .gate.g4{ animation-delay:0.9s; }
+  .gate.g5{ animation-delay:1.2s; }
+  @keyframes pulse{
+    0%,100%{ opacity:1; }
+    50%{ opacity:0.45; }
+  }
+
+  section{padding:64px 0; border-top:1px solid var(--line); position:relative;}
+  section h2{font-size:1.6rem; margin-bottom:18px;}
+  section > .wrap > p, section p.body{color:var(--muted); font-size:1.02rem; max-width:62ch;}
+
+  .steps{margin-top:20px;}
+  .step{
+    display:flex; gap:20px; padding:20px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .step:last-child{border-bottom:none;}
+  .step-num{
+    font-family:'Space Grotesk',sans-serif;
+    color:var(--teal); font-weight:600; font-size:1.15rem; min-width:30px;
+  }
+  .step p{color:var(--text); font-size:0.98rem; max-width:none;}
+  .step-title{font-weight:600; margin-bottom:4px;}
+
+  .stack{display:flex; flex-wrap:wrap; gap:10px; margin-top:16px;}
+  .chip{
+    border:1px solid var(--line); padding:8px 15px; border-radius:20px;
+    font-size:0.88rem; color:var(--muted); transition:border-color 0.15s, color 0.15s;
+  }
+  .chip:hover{border-color:var(--violet); color:var(--text);}
+
+  .chart-panel{
+    background:var(--bg-panel); border:1px solid var(--line);
+    border-radius:14px; padding:32px 28px; margin-top:24px;
+  }
+  .chart-row{display:flex; align-items:flex-end; gap:56px; height:180px; margin-top:28px; padding:0 8px;}
+  .bar-col{display:flex; flex-direction:column; align-items:center; gap:10px; flex:1;}
+  .bar{
+    width:64px; border-radius:8px 8px 0 0;
+    background:linear-gradient(180deg, var(--violet), var(--violet-dim));
+    height:0; animation:grow 1.4s cubic-bezier(.2,.8,.2,1) forwards 0.3s;
+    position:relative;
+  }
+  .bar.classical{ background:linear-gradient(180deg, var(--teal), #1CAE8E); animation-delay:0.5s; }
+  .bar-val{ position:absolute; top:-28px; left:0; right:0; text-align:center; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:0.95rem; }
+  .bar-label{font-size:0.88rem; color:var(--muted); text-align:center;}
+  @keyframes grow{ from{height:0;} }
+
+  .panel-note{margin-top:22px; font-size:0.9rem; color:var(--muted);}
+
+  footer{padding:56px 0 72px; border-top:1px solid var(--line);}
+  footer p{color:var(--muted); font-size:0.9rem;}
+  footer a{color:var(--teal); text-decoration:none;}
+  footer a:hover{text-decoration:underline;}
+
+  @media (max-width:560px){
+    .chart-row{ gap:28px; }
+    .bar{ width:48px; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important;}
+    header .kicker, header h1, header .lede, header .cta-row, .circuit-box{opacity:1;}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="glow glow-1"></div>
+    <div class="glow glow-2"></div>
+
+    <div class="kicker">QuantumXpo 2026 — RGUKT IIIT Nuzvid</div>
+    <h1>Portfolios, chosen by <span class="accent">a quantum optimizer.</span></h1>
+    <p class="lede">QuantRisk formulates asset selection as a QUBO and solves it with the Quantum Approximate Optimization Algorithm on Qiskit — then puts the answer head-to-head against a classical brute-force search.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="quantrisk.py">View the code</a>
+      <a class="btn btn-ghost" href="https://github.com/guruvemula61-cmyk/QuantRisk-QAOA">GitHub repo</a>
+    </div>
+
+    <div class="circuit-box">
+      <div class="circuit-label">A slice of the QAOA circuit — five qubits, two layers</div>
+      <svg viewBox="0 0 720 150" width="100%" role="img" aria-label="Quantum circuit diagram">
+        <g stroke="#2A3559" stroke-width="1.5">
+          <line x1="40" y1="20" x2="680" y2="20"/>
+          <line x1="40" y1="46" x2="680" y2="46"/>
+          <line x1="40" y1="72" x2="680" y2="72"/>
+          <line x1="40" y1="98" x2="680" y2="98"/>
+          <line x1="40" y1="124" x2="680" y2="124"/>
+        </g>
+        <g font-family="Space Grotesk, sans-serif" font-size="13" fill="#8B93B0">
+          <text x="8" y="24">q0</text>
+          <text x="8" y="50">q1</text>
+          <text x="8" y="76">q2</text>
+          <text x="8" y="102">q3</text>
+          <text x="8" y="128">q4</text>
+        </g>
+        <g>
+          <rect class="gate" x="90" y="8" width="34" height="24" rx="6" fill="#9B6BFF"/>
+          <rect class="gate g2" x="90" y="34" width="34" height="24" rx="6" fill="#9B6BFF"/>
+          <rect class="gate g3" x="90" y="60" width="34" height="24" rx="6" fill="#9B6BFF"/>
+          <rect class="gate g4" x="90" y="86" width="34" height="24" rx="6" fill="#9B6BFF"/>
+          <rect class="gate g5" x="90" y="112" width="34" height="24" rx="6" fill="#9B6BFF"/>
+          <text x="97" y="25" font-size="12" fill="#0A0E1A" font-weight="600">H</text>
+          <text x="97" y="51" font-size="12" fill="#0A0E1A" font-weight="600">H</text>
+          <text x="97" y="77" font-size="12" fill="#0A0E1A" font-weight="600">H</text>
+          <text x="97" y="103" font-size="12" fill="#0A0E1A" font-weight="600">H</text>
+          <text x="97" y="129" font-size="12" fill="#0A0E1A" font-weight="600">H</text>
+        </g>
+        <g stroke="#2FE6B8" stroke-width="2">
+          <line class="gate" x1="190" y1="20" x2="190" y2="46"/>
+          <line class="gate g3" x1="190" y1="72" x2="190" y2="98"/>
+        </g>
+        <g>
+          <circle class="gate" cx="190" cy="20" r="5" fill="#2FE6B8"/>
+          <circle class="gate" cx="190" cy="46" r="5" fill="#2FE6B8"/>
+          <circle class="gate g3" cx="190" cy="72" r="5" fill="#2FE6B8"/>
+          <circle class="gate g3" cx="190" cy="98" r="5" fill="#2FE6B8"/>
+        </g>
+        <g>
+          <rect class="gate g2" x="260" y="34" width="40" height="24" rx="6" fill="#F1F2F8" opacity="0.9"/>
+          <text x="266" y="51" font-size="11" fill="#0A0E1A" font-weight="600">Rz(γ)</text>
+          <rect class="gate g4" x="260" y="86" width="40" height="24" rx="6" fill="#F1F2F8" opacity="0.9"/>
+          <text x="266" y="103" font-size="11" fill="#0A0E1A" font-weight="600">Rz(γ)</text>
+        </g>
+        <g stroke="#2FE6B8" stroke-width="2">
+          <line class="gate g2" x1="360" y1="46" x2="360" y2="98"/>
+        </g>
+        <g>
+          <circle class="gate g2" cx="360" cy="46" r="5" fill="#2FE6B8"/>
+          <circle class="gate g2" cx="360" cy="98" r="5" fill="#2FE6B8"/>
+        </g>
+        <g>
+          <rect class="gate g3" x="420" y="8" width="40" height="24" rx="6" fill="#9B6BFF" opacity="0.85"/>
+          <text x="428" y="25" font-size="11" fill="#0A0E1A" font-weight="600">Rx(β)</text>
+          <rect class="gate g4" x="420" y="60" width="40" height="24" rx="6" fill="#9B6BFF" opacity="0.85"/>
+          <text x="428" y="77" font-size="11" fill="#0A0E1A" font-weight="600">Rx(β)</text>
+          <rect class="gate g5" x="420" y="112" width="40" height="24" rx="6" fill="#9B6BFF" opacity="0.85"/>
+          <text x="428" y="129" font-size="11" fill="#0A0E1A" font-weight="600">Rx(β)</text>
+        </g>
+        <g font-family="Space Grotesk, sans-serif" font-size="12" fill="#8B93B0">
+          <line x1="560" y1="4" x2="560" y2="140" stroke="#2A3559" stroke-dasharray="3,4"/>
+          <text x="575" y="14">measure</text>
+          <rect x="620" y="8" width="30" height="24" rx="4" fill="none" stroke="#8B93B0"/>
+          <rect x="620" y="34" width="30" height="24" rx="4" fill="none" stroke="#8B93B0"/>
+          <rect x="620" y="60" width="30" height="24" rx="4" fill="none" stroke="#8B93B0"/>
+          <rect x="620" y="86" width="30" height="24" rx="4" fill="none" stroke="#8B93B0"/>
+          <rect x="620" y="112" width="30" height="24" rx="4" fill="none" stroke="#8B93B0"/>
+        </g>
+      </svg>
+    </div>
+  </header>
+
+  <section>
+    <h2>The problem</h2>
+    <p class="body">Picking the best subset of assets to hold — maximizing return while minimizing risk — is a combinatorial choice. Checking every combination by brute force scales poorly: with more candidate assets, the search space grows faster than classical hardware can keep up.</p>
+  </section>
+
+  <section>
+    <h2>How QuantRisk solves it</h2>
+    <p class="body">The selection problem is rewritten as a Quadratic Unconstrained Binary Optimization (QUBO), mapped onto an Ising Hamiltonian, and handed to QAOA running on a Qiskit simulator.</p>
+    <div class="steps">
+      <div class="step">
+        <span class="step-num">01</span>
+        <div><p class="step-title">Gather the data</p><p>Expected returns and a covariance matrix for the candidate assets.</p></div>
+      </div>
+      <div class="step">
+        <span class="step-num">02</span>
+        <div><p class="step-title">Build the QUBO</p><p>Encode the return/risk trade-off and budget constraint with Qiskit Optimization.</p></div>
+      </div>
+      <div class="step">
+        <span class="step-num">03</span>
+        <div><p class="step-title">Map to a Hamiltonian</p><p>Convert the QUBO into the Ising form the quantum circuit runs on.</p></div>
+      </div>
+      <div class="step">
+        <span class="step-num">04</span>
+        <div><p class="step-title">Run QAOA</p><p>A COBYLA-tuned parameter search alternates cost and mixer layers on a simulator.</p></div>
+      </div>
+      <div class="step">
+        <span class="step-num">05</span>
+        <div><p class="step-title">Benchmark it</p><p>Compare the quantum result against a classical brute-force solution.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Quantum vs. classical</h2>
+    <p class="body">Lower is better — the objective blends negative return with risk. On this six-asset test case, QAOA lands close to the classical optimum.</p>
+    <div class="chart-panel">
+      <div class="chart-row">
+        <div class="bar-col">
+          <div class="bar" style="height:132px;"><span class="bar-val">−0.41</span></div>
+          <span class="bar-label">QAOA<br>(quantum)</span>
+        </div>
+        <div class="bar-col">
+          <div class="bar classical" style="height:140px;"><span class="bar-val">−0.44</span></div>
+          <span class="bar-label">Brute-force<br>(classical)</span>
+        </div>
+      </div>
+      <p class="panel-note">Same three-asset selection out of six candidates, budget-constrained. Full run and plot generation is in <code>quantrisk.py</code>.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Built with</h2>
+    <div class="stack">
+      <span class="chip">Qiskit</span>
+      <span class="chip">Qiskit Optimization</span>
+      <span class="chip">Qiskit Algorithms</span>
+      <span class="chip">Qiskit Runtime</span>
+      <span class="chip">QAOA</span>
+      <span class="chip">COBYLA</span>
+      <span class="chip">NumPy</span>
+      <span class="chip">Matplotlib</span>
+    </div>
+  </section>
+
+  <footer>
+    <p>QuantRisk — built for QuantumXpo 2026. Source on <a href="https://github.com/guruvemula61-cmyk/QuantRisk-QAOA">GitHub</a>.</p>
+  </footer>
+</div>
+
+</body>
+</html>
